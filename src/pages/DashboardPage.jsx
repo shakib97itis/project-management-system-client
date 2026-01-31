@@ -1,7 +1,7 @@
-import {useAuth} from '../auth/AuthProvider';
+import { useAuth } from '../auth/AuthProvider';
 
 export default function DashboardPage() {
-  const {user} = useAuth();
+  const { user } = useAuth();
 
   return (
     <div className="bg-white rounded-xl shadow p-6">

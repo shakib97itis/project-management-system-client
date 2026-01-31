@@ -1,13 +1,13 @@
-import {NavLink, Outlet, useNavigate} from 'react-router-dom';
-import {useAuth} from '../auth/AuthProvider';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { useAuth } from '../auth/AuthProvider';
 
 export default function Layout() {
-  const {user, logout} = useAuth();
-  const nav = useNavigate();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
-  const onLogout = () => {
+  const handleLogout = () => {
     logout();
-    nav('/login');
+    navigate('/login');
   };
 
   return (
@@ -35,7 +35,7 @@ export default function Layout() {
             </span>
             <button
               className="px-3 py-1.5 rounded bg-gray-900 text-white text-sm"
-              onClick={onLogout}
+              onClick={handleLogout}
             >
               Logout
             </button>

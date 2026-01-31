@@ -14,11 +14,13 @@ import {
 
 const AuthCtx = createContext(null);
 
-export function AuthProvider({children}) {
+export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => getAuthUser());
 
   useEffect(() => {
-    if (user) setAuthUser(user);
+    if (user) {
+      setAuthUser(user);
+    }
   }, [user]);
 
   const logout = () => {
@@ -28,14 +30,14 @@ export function AuthProvider({children}) {
   };
 
   const value = useMemo(
-    () => ({user, setUser, logout, isAuthed: !!user}),
+    () => ({ user, setUser, logout, isAuthed: !!user }),
     [user],
   );
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
 }
 
 export function useAuth() {
-  const v = useContext(AuthCtx);
-  if (!v) throw new Error('useAuth must be used inside AuthProvider');
-  return v;
+  const value = useContext(AuthCtx);
+  if (!value) throw new Error('useAuth must be used inside AuthProvider');
+  return value;
 }

@@ -1,26 +1,29 @@
-import {useMemo, useState} from 'react';
-import {useSearchParams, useNavigate} from 'react-router-dom';
-import {useMutation} from '@tanstack/react-query';
-import {registerViaInviteApi} from '../api/auth.api';
-import {setAccessToken} from '../utils/storage';
-import {useAuth} from '../auth/AuthProvider';
+import { useMemo, useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { registerViaInviteApi } from '../api/auth.api';
+import { useAuth } from '../auth/AuthProvider';
+import { setAccessToken } from '../utils/storage';
 
 export default function InviteRegisterPage() {
-  const [sp] = useSearchParams();
-  const token = useMemo(() => sp.get('token') || '', [sp]);
+  const [searchParams] = useSearchParams();
+  const token = useMemo(
+    () => searchParams.get('token') || '',
+    [searchParams],
+  );
 
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
 
-  const {setUser} = useAuth();
-  const nav = useNavigate();
+  const { setUser } = useAuth();
+  const navigate = useNavigate();
 
-  const m = useMutation({
+  const registerMutation = useMutation({
     mutationFn: registerViaInviteApi,
     onSuccess: (res) => {
       setAccessToken(res.accessToken);
       setUser(res.user);
-      nav('/dashboard');
+      navigate('/dashboard');
     },
   });
 
@@ -51,18 +54,21 @@ export default function InviteRegisterPage() {
             onChange={(e) => setPassword(e.target.value)}
           />
 
-          {m.isError && (
+          {registerMutation.isError && (
             <p className="text-sm text-red-600">
-              {m.error?.response?.data?.message || 'Registration failed'}
+              {registerMutation.error?.response?.data?.message ||
+                'Registration failed'}
             </p>
           )}
 
           <button
             className="w-full bg-gray-900 text-white rounded px-3 py-2 disabled:opacity-50"
-            disabled={!token || m.isPending}
-            onClick={() => m.mutate({token, name, password})}
+            disabled={!token || registerMutation.isPending}
+            onClick={() =>
+              registerMutation.mutate({ token, name, password })
+            }
           >
-            {m.isPending ? 'Creating account...' : 'Register'}
+            {registerMutation.isPending ? 'Creating account...' : 'Register'}
           </button>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import {createBrowserRouter} from 'react-router-dom';
+import { createBrowserRouter } from 'react-router-dom';
 import RequireAuth from '../auth/RequireAuth';
 import RequireRole from '../auth/RequireRole';
 

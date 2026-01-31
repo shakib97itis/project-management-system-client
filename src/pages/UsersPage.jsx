@@ -7,6 +7,10 @@ import {
   updateUserStatusApi,
 } from '../api/users.api';
 import {queryClient} from '../app/queryClient';
+import InviteLinkPanel from '../components/users/InviteLinkPanel';
+import InviteUserForm from '../components/users/InviteUserForm';
+import PaginationControls from '../components/users/PaginationControls';
+import UsersList from '../components/users/UsersList';
 
 export default function UsersPage() {
   const [page, setPage] = useState(1);
@@ -15,13 +19,13 @@ export default function UsersPage() {
   const [inviteRole, setInviteRole] = useState('STAFF');
   const [inviteLink, setInviteLink] = useState('');
 
-  const q = useQuery({
+  const usersQuery = useQuery({
     queryKey: ['users', page],
     queryFn: () => getUsersApi(page, 10),
     keepPreviousData: true,
   });
 
-  const inviteM = useMutation({
+  const inviteMutation = useMutation({
     mutationFn: inviteUserApi,
     onSuccess: (res) => {
       const link = res.inviteLink
@@ -33,126 +37,58 @@ export default function UsersPage() {
     },
   });
 
-  const roleM = useMutation({
+  const roleMutation = useMutation({
     mutationFn: ({id, role}) => updateUserRoleApi(id, role),
     onSuccess: () => queryClient.invalidateQueries({queryKey: ['users']}),
   });
 
-  const statusM = useMutation({
+  const statusMutation = useMutation({
     mutationFn: ({id, status}) => updateUserStatusApi(id, status),
     onSuccess: () => queryClient.invalidateQueries({queryKey: ['users']}),
   });
 
-  const items = q.data?.items || [];
+  const items = usersQuery.data?.items || [];
+  const isInviting = inviteMutation.isPending;
+
+  const handleInvite = () =>
+    inviteMutation.mutate({email: inviteEmail, role: inviteRole});
+
+  const handleRoleChange = (id, role) => roleMutation.mutate({id, role});
+
+  const handleStatusToggle = (id, status) =>
+    statusMutation.mutate({id, status});
 
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-xl shadow p-6">
         <h1 className="text-xl font-semibold">User Management</h1>
 
-        <div className="mt-4 grid gap-2 md:grid-cols-3">
-          <input
-            className="border rounded px-3 py-2"
-            placeholder="Invite email"
-            value={inviteEmail}
-            onChange={(e) => setInviteEmail(e.target.value)}
-          />
+        <InviteUserForm
+          email={inviteEmail}
+          role={inviteRole}
+          onEmailChange={setInviteEmail}
+          onRoleChange={setInviteRole}
+          onSubmit={handleInvite}
+          isSubmitting={isInviting}
+        />
 
-          <select
-            className="border rounded px-3 py-2"
-            value={inviteRole}
-            onChange={(e) => setInviteRole(e.target.value)}
-          >
-            <option value="ADMIN">ADMIN</option>
-            <option value="MANAGER">MANAGER</option>
-            <option value="STAFF">STAFF</option>
-          </select>
-
-          <button
-            className="rounded bg-gray-900 text-white px-3 py-2"
-            onClick={() =>
-              inviteM.mutate({email: inviteEmail, role: inviteRole})
-            }
-            disabled={inviteM.isPending}
-          >
-            {inviteM.isPending ? 'Inviting...' : 'Send Invite'}
-          </button>
-        </div>
-
-        {inviteLink && (
-          <div className="mt-3 text-sm">
-            <div className="font-medium">Invite Link (copy):</div>
-            <div className="mt-1 p-2 bg-gray-100 rounded break-all">
-              {inviteLink}
-            </div>
-          </div>
-        )}
+        <InviteLinkPanel link={inviteLink} />
       </div>
 
       <div className="bg-white rounded-xl shadow p-6">
-        {q.isLoading && <p>Loading users...</p>}
-        {q.isError && <p className="text-red-600">Failed to load users</p>}
+        <UsersList
+          users={items}
+          isLoading={usersQuery.isLoading}
+          isError={usersQuery.isError}
+          onRoleChange={handleRoleChange}
+          onStatusToggle={handleStatusToggle}
+        />
 
-        <div className="space-y-3">
-          {items.map((u) => (
-            <div
-              key={u.id}
-              className="border rounded-lg p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3"
-            >
-              <div>
-                <div className="font-medium">
-                  {u.name}{' '}
-                  <span className="text-xs text-gray-500">({u.email})</span>
-                </div>
-                <div className="text-xs text-gray-500">
-                  Role: {u.role} • Status: {u.status}
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                <select
-                  className="border rounded px-2 py-1"
-                  value={u.role}
-                  onChange={(e) =>
-                    roleM.mutate({id: u.id, role: e.target.value})
-                  }
-                >
-                  <option value="ADMIN">ADMIN</option>
-                  <option value="MANAGER">MANAGER</option>
-                  <option value="STAFF">STAFF</option>
-                </select>
-
-                <button
-                  className="px-3 py-1.5 rounded border"
-                  onClick={() =>
-                    statusM.mutate({
-                      id: u.id,
-                      status: u.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE',
-                    })
-                  }
-                >
-                  {u.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-4 flex gap-2">
-          <button
-            className="px-3 py-1.5 border rounded"
-            disabled={page === 1}
-            onClick={() => setPage((p) => p - 1)}
-          >
-            Prev
-          </button>
-          <button
-            className="px-3 py-1.5 border rounded"
-            onClick={() => setPage((p) => p + 1)}
-          >
-            Next
-          </button>
-        </div>
+        <PaginationControls
+          page={page}
+          onPrev={() => setPage((p) => p - 1)}
+          onNext={() => setPage((p) => p + 1)}
+        />
       </div>
     </div>
   );

@@ -1,50 +1,56 @@
-import {useMemo, useState} from 'react';
-import {useMutation, useQuery} from '@tanstack/react-query';
-import {queryClient} from '../app/queryClient';
-import {useAuth} from '../auth/AuthProvider';
+import { useMemo, useState } from 'react';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   createProjectApi,
   deleteProjectApi,
   getProjectsApi,
 } from '../api/projects.api';
+import { queryClient } from '../app/queryClient';
+import { useAuth } from '../auth/AuthProvider';
 
 export default function ProjectsPage() {
-  const {user} = useAuth();
+  const { user } = useAuth();
   const isAdmin = user?.role === 'ADMIN';
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
 
-  const q = useQuery({queryKey: ['projects'], queryFn: getProjectsApi});
+  const projectsQuery = useQuery({
+    queryKey: ['projects'],
+    queryFn: getProjectsApi,
+  });
 
-  const createM = useMutation({
+  const createMutation = useMutation({
     mutationFn: createProjectApi,
     onSuccess: () => {
       setName('');
       setDescription('');
-      queryClient.invalidateQueries({queryKey: ['projects']});
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
     },
   });
 
-  const deleteM = useMutation({
+  const deleteMutation = useMutation({
     mutationFn: deleteProjectApi,
     onMutate: async (id) => {
-      await queryClient.cancelQueries({queryKey: ['projects']});
+      await queryClient.cancelQueries({ queryKey: ['projects'] });
       const prev = queryClient.getQueryData(['projects']) || [];
       queryClient.setQueryData(['projects'], (old = []) =>
         old.filter((p) => p.id !== id),
       );
-      return {prev};
+      return { prev };
     },
     onError: (_err, _id, ctx) => {
-      if (ctx?.prev) queryClient.setQueryData(['projects'], ctx.prev);
+      if (ctx?.prev) {
+        queryClient.setQueryData(['projects'], ctx.prev);
+      }
     },
-    onSettled: () => queryClient.invalidateQueries({queryKey: ['projects']}),
+    onSettled: () =>
+      queryClient.invalidateQueries({ queryKey: ['projects'] }),
   });
 
   const projects = useMemo(
-    () => (q.data || []).filter((p) => !p.isDeleted),
-    [q.data],
+    () => (projectsQuery.data || []).filter((p) => !p.isDeleted),
+    [projectsQuery.data],
   );
 
   console.log(projects);
@@ -71,22 +77,24 @@ export default function ProjectsPage() {
 
         <button
           className="mt-3 px-4 py-2 rounded bg-gray-900 text-white"
-          disabled={createM.isPending}
-          onClick={() => createM.mutate({name, description})}
+          disabled={createMutation.isPending}
+          onClick={() => createMutation.mutate({ name, description })}
         >
-          {createM.isPending ? 'Creating...' : 'Create Project'}
+          {createMutation.isPending ? 'Creating...' : 'Create Project'}
         </button>
 
-        {createM.isError && (
+        {createMutation.isError && (
           <p className="mt-2 text-sm text-red-600">
-            {createM.error?.response?.data?.message || 'Create failed'}
+            {createMutation.error?.response?.data?.message || 'Create failed'}
           </p>
         )}
       </div>
 
       <div className="bg-white rounded-xl shadow p-6">
-        {q.isLoading && <p>Loading...</p>}
-        {q.isError && <p className="text-red-600">Failed to load projects</p>}
+        {projectsQuery.isLoading && <p>Loading...</p>}
+        {projectsQuery.isError && (
+          <p className="text-red-600">Failed to load projects</p>
+        )}
 
         <div className="space-y-3">
           {projects.map((p) => (
@@ -105,7 +113,7 @@ export default function ProjectsPage() {
               {isAdmin && (
                 <button
                   className="px-3 py-1.5 rounded bg-red-600 text-white"
-                  onClick={() => deleteM.mutate(p._id)}
+                  onClick={() => deleteMutation.mutate(p._id)}
                 >
                   Delete
                 </button>
@@ -113,7 +121,7 @@ export default function ProjectsPage() {
             </div>
           ))}
 
-          {!q.isLoading && projects.length === 0 && (
+          {!projectsQuery.isLoading && projects.length === 0 && (
             <p className="text-sm text-gray-500">No projects yet.</p>
           )}
         </div>
