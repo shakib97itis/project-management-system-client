@@ -4,9 +4,13 @@ import {
   createProjectApi,
   deleteProjectApi,
   getProjectsApi,
+  updateProjectApi,
 } from '../api/projects.api';
 import { queryClient } from '../app/queryClient';
 import { useAuth } from '../auth/AuthProvider';
+import ProjectCreateForm from '../components/projects/ProjectCreateForm';
+import ProjectItem from '../components/projects/ProjectItem';
+import ProjectsList from '../components/projects/ProjectsList';
 
 export default function ProjectsPage() {
   const { user } = useAuth();
@@ -14,6 +18,10 @@ export default function ProjectsPage() {
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [editingId, setEditingId] = useState(null);
+  const [editName, setEditName] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editStatus, setEditStatus] = useState('');
 
   const projectsQuery = useQuery({
     queryKey: ['projects'],
@@ -35,7 +43,7 @@ export default function ProjectsPage() {
       await queryClient.cancelQueries({ queryKey: ['projects'] });
       const prev = queryClient.getQueryData(['projects']) || [];
       queryClient.setQueryData(['projects'], (old = []) =>
-        old.filter((p) => p.id !== id),
+        old.filter((p) => p._id !== id),
       );
       return { prev };
     },
@@ -48,83 +56,149 @@ export default function ProjectsPage() {
       queryClient.invalidateQueries({ queryKey: ['projects'] }),
   });
 
+  const updateMutation = useMutation({
+    mutationFn: ({ id, payload }) => updateProjectApi(id, payload),
+    onMutate: async ({ id, payload }) => {
+      await queryClient.cancelQueries({ queryKey: ['projects'] });
+      const prev = queryClient.getQueryData(['projects']) || [];
+      queryClient.setQueryData(['projects'], (old = []) =>
+        old.map((p) => (p._id === id ? { ...p, ...payload } : p)),
+      );
+      return { prev };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) {
+        queryClient.setQueryData(['projects'], ctx.prev);
+      }
+    },
+    onSuccess: () => {
+      setEditingId(null);
+      setEditName('');
+      setEditDescription('');
+      setEditStatus('');
+    },
+    onSettled: () =>
+      queryClient.invalidateQueries({ queryKey: ['projects'] }),
+  });
+
   const projects = useMemo(
     () => (projectsQuery.data || []).filter((p) => !p.isDeleted),
     [projectsQuery.data],
   );
 
-  console.log(projects);
+  const startEdit = (project) => {
+    setEditingId(project._id);
+    setEditName(project.name || '');
+    setEditDescription(project.description || '');
+    setEditStatus(project.status || '');
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditName('');
+    setEditDescription('');
+    setEditStatus('');
+  };
+
+  const saveEdit = (project) => {
+    const trimmedName = editName.trim();
+    const trimmedDescription = editDescription.trim();
+    const trimmedStatus = editStatus.trim();
+    if (!trimmedName) return;
+    updateMutation.mutate({
+      id: project._id,
+      payload: {
+        name: trimmedName,
+        description: trimmedDescription,
+        status: trimmedStatus,
+      },
+    });
+  };
+
+  const resolveErrorMessage = (error, fallback) =>
+    error?.response?.data?.message || fallback;
+
+  const isSaveDisabled = (project) => {
+    const trimmedName = editName.trim();
+    const trimmedDescription = editDescription.trim();
+    const trimmedStatus = editStatus.trim();
+
+    if (!trimmedName) return true;
+
+    return (
+      trimmedName === (project.name || '') &&
+      trimmedDescription === (project.description || '') &&
+      trimmedStatus === (project.status || '')
+    );
+  };
+
+  const handleCreate = () => createMutation.mutate({ name, description });
+
+  const handleDelete = (project) => deleteMutation.mutate(project._id);
+
+  const createErrorMessage = createMutation.isError
+    ? resolveErrorMessage(createMutation.error, 'Create failed')
+    : null;
+
+  const updateErrorMessage = updateMutation.isError
+    ? resolveErrorMessage(updateMutation.error, 'Update failed')
+    : null;
+
+  const editValues = {
+    name: editName,
+    description: editDescription,
+    status: editStatus,
+  };
+
+  const hasUpdateErrorFor = (projectId) =>
+    updateMutation.isError && updateMutation.variables?.id === projectId;
 
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-xl shadow p-6">
         <h1 className="text-xl font-semibold">Projects</h1>
 
-        <div className="mt-4 grid gap-2 md:grid-cols-3">
-          <input
-            className="border rounded px-3 py-2"
-            placeholder="Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          <input
-            className="border rounded px-3 py-2 md:col-span-2"
-            placeholder="Description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-        </div>
-
-        <button
-          className="mt-3 px-4 py-2 rounded bg-gray-900 text-white"
-          disabled={createMutation.isPending}
-          onClick={() => createMutation.mutate({ name, description })}
-        >
-          {createMutation.isPending ? 'Creating...' : 'Create Project'}
-        </button>
-
-        {createMutation.isError && (
-          <p className="mt-2 text-sm text-red-600">
-            {createMutation.error?.response?.data?.message || 'Create failed'}
-          </p>
-        )}
+        <ProjectCreateForm
+          name={name}
+          description={description}
+          onNameChange={setName}
+          onDescriptionChange={setDescription}
+          onSubmit={handleCreate}
+          isSubmitting={createMutation.isPending}
+          errorMessage={createErrorMessage}
+        />
       </div>
 
       <div className="bg-white rounded-xl shadow p-6">
-        {projectsQuery.isLoading && <p>Loading...</p>}
-        {projectsQuery.isError && (
-          <p className="text-red-600">Failed to load projects</p>
-        )}
-
-        <div className="space-y-3">
-          {projects.map((p) => (
-            <div
-              key={p._id}
-              className="border rounded-lg p-4 flex items-start justify-between gap-3"
-            >
-              <div>
-                <div className="font-medium">{p.name}</div>
-                <div className="text-sm text-gray-600">{p.description}</div>
-                <div className="text-xs text-gray-400 mt-1">
-                  Status: {p.status}
-                </div>
-              </div>
-
-              {isAdmin && (
-                <button
-                  className="px-3 py-1.5 rounded bg-red-600 text-white"
-                  onClick={() => deleteMutation.mutate(p._id)}
-                >
-                  Delete
-                </button>
-              )}
-            </div>
-          ))}
-
-          {!projectsQuery.isLoading && projects.length === 0 && (
-            <p className="text-sm text-gray-500">No projects yet.</p>
+        <ProjectsList
+          projects={projects}
+          isLoading={projectsQuery.isLoading}
+          isError={projectsQuery.isError}
+          emptyMessage="No projects yet."
+          renderItem={(project) => (
+            <ProjectItem
+              key={project._id}
+              project={project}
+              isEditing={editingId === project._id}
+              editValues={editValues}
+              onEditNameChange={setEditName}
+              onEditDescriptionChange={setEditDescription}
+              onEditStatusChange={setEditStatus}
+              onStartEdit={startEdit}
+              onCancelEdit={cancelEdit}
+              onSaveEdit={saveEdit}
+              onDelete={handleDelete}
+              isSaving={updateMutation.isPending}
+              isSaveDisabled={isSaveDisabled(project)}
+              canManage={isAdmin}
+              errorMessage={
+                hasUpdateErrorFor(project._id)
+                  ? updateErrorMessage
+                  : null
+              }
+            />
           )}
-        </div>
+        />
       </div>
     </div>
   );

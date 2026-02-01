@@ -1,4 +1,5 @@
 import {useState} from 'react';
+import {EyeIcon, EyeSlashIcon} from '@heroicons/react/24/outline';
 import {useMutation} from '@tanstack/react-query';
 import {useNavigate} from 'react-router-dom';
 import {loginApi} from '../api/auth.api';
@@ -8,6 +9,7 @@ import {setAccessToken} from '../utils/storage';
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const {setUser} = useAuth();
   const navigate = useNavigate();
 
@@ -78,19 +80,37 @@ export default function LoginPage() {
               >
                 Password
               </label>
-              <input
-                id="login-password"
-                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-base text-gray-900 transition focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-200 disabled:cursor-not-allowed disabled:bg-gray-100 sm:py-3"
-                type="password"
-                name="password"
-                autoComplete="current-password"
-                required
-                minLength={6}
-                aria-invalid={hasError}
-                aria-describedby={hasError ? 'login-error' : undefined}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
+              <div className="relative">
+                <input
+                  id="login-password"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 pr-12 text-base text-gray-900 transition focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-200 disabled:cursor-not-allowed disabled:bg-gray-100 sm:py-3"
+                  type={isPasswordVisible ? 'text' : 'password'}
+                  name="password"
+                  autoComplete="current-password"
+                  required
+                  minLength={6}
+                  aria-invalid={hasError}
+                  aria-describedby={hasError ? 'login-error' : undefined}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <button
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-2 text-gray-600 transition hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-200"
+                  type="button"
+                  aria-label={isPasswordVisible ? 'Hide password' : 'Show password'}
+                  aria-pressed={isPasswordVisible}
+                  onClick={() => setIsPasswordVisible((prev) => !prev)}
+                >
+                  {isPasswordVisible ? (
+                    <EyeSlashIcon className="h-5 w-5" aria-hidden="true" />
+                  ) : (
+                    <EyeIcon className="h-5 w-5" aria-hidden="true" />
+                  )}
+                  <span className="sr-only">
+                    {isPasswordVisible ? 'Hide password' : 'Show password'}
+                  </span>
+                </button>
+              </div>
             </div>
 
             {hasError && (
