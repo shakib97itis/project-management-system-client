@@ -33,7 +33,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4 py-10 sm:py-16">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-slate-100 px-4 py-10 sm:py-16">
       <div className="mx-auto w-full max-w-md sm:max-w-lg rounded-2xl border border-gray-200/80 bg-white/90 p-6 shadow-xl shadow-gray-200/60 backdrop-blur sm:p-8">
         <div className="space-y-2 text-center">
           <h1 className="text-2xl font-semibold text-gray-900 sm:text-3xl">
@@ -97,7 +97,9 @@ export default function LoginPage() {
                 <button
                   className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-2 text-gray-600 transition hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-200"
                   type="button"
-                  aria-label={isPasswordVisible ? 'Hide password' : 'Show password'}
+                  aria-label={
+                    isPasswordVisible ? 'Hide password' : 'Show password'
+                  }
                   aria-pressed={isPasswordVisible}
                   onClick={() => setIsPasswordVisible((prev) => !prev)}
                 >
