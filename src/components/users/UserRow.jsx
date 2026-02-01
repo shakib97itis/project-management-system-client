@@ -26,16 +26,13 @@ export default function UserRow({
       <div className="flex gap-2">
         <RoleSelect
           value={user.role}
-          onChange={(role) => onRoleChange?.(user.id, role)}
+          onChange={(role) => onRoleChange?.(user._id, role)}
         />
 
         <button
           className={`px-3 py-1.5 rounded border transition-colors ${statusButtonClasses}`}
           onClick={() =>
-            onStatusToggle?.(
-              user.id,
-              isActive ? 'INACTIVE' : 'ACTIVE',
-            )
+            onStatusToggle?.(user._id, isActive ? 'INACTIVE' : 'ACTIVE')
           }
         >
           {isActive ? 'Deactivate' : 'Activate'}
