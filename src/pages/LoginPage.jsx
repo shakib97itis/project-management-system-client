@@ -4,7 +4,7 @@ import {useMutation} from '@tanstack/react-query';
 import {useNavigate} from 'react-router-dom';
 import {loginApi} from '../api/auth.api';
 import {useAuth} from '../auth/AuthProvider';
-import {setAccessToken} from '../utils/storage';
+import {setAccessToken} from '../utils/accessToken';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');

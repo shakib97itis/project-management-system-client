@@ -1,12 +1,15 @@
 import React, {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
   useState,
 } from 'react';
+import { logoutApi } from '../api/auth.api';
+import { refreshAccessToken } from '../api/axios';
+import { clearAccessToken } from '../utils/accessToken';
 import {
-  clearAccessToken,
   clearAuthUser,
   getAuthUser,
   setAuthUser,
@@ -16,22 +19,68 @@ const AuthCtx = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => getAuthUser());
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
       setAuthUser(user);
+    } else {
+      clearAuthUser();
     }
   }, [user]);
 
-  const logout = () => {
+  useEffect(() => {
+    let isMounted = true;
+
+    const initAuth = async () => {
+      try {
+        await refreshAccessToken();
+      } catch (error) {
+        if (isMounted) {
+          try {
+            await logoutApi();
+          } catch (logoutError) {
+            // Ignore logout errors during init.
+          }
+          clearAccessToken();
+          clearAuthUser();
+          setUser(null);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    initAuth();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [
+    refreshAccessToken,
+    logoutApi,
+    clearAccessToken,
+    clearAuthUser,
+    setUser,
+    setIsLoading,
+  ]);
+
+  const logout = useCallback(async () => {
+    try {
+      await logoutApi();
+    } catch (error) {
+      // Ignore logout errors and still clear local state.
+    }
     clearAccessToken();
     clearAuthUser();
     setUser(null);
-  };
+  }, [logoutApi, clearAccessToken, clearAuthUser, setUser]);
 
   const value = useMemo(
-    () => ({ user, setUser, logout, isAuthed: !!user }),
-    [user],
+    () => ({ user, setUser, logout, isAuthed: !!user, isLoading }),
+    [user, setUser, logout, isLoading],
   );
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
 }

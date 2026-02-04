@@ -3,7 +3,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { registerViaInviteApi } from '../api/auth.api';
 import { useAuth } from '../auth/AuthProvider';
-import { setAccessToken } from '../utils/storage';
+import { setAccessToken } from '../utils/accessToken';
 
 export default function InviteRegisterPage() {
   const [searchParams] = useSearchParams();
