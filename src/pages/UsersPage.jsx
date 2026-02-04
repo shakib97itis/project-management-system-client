@@ -7,17 +7,21 @@ import {
   updateUserStatusApi,
 } from '../api/users.api';
 import {queryClient} from '../app/queryClient';
+import {useAuth} from '../auth/AuthProvider';
 import InviteLinkPanel from '../components/users/InviteLinkPanel';
 import InviteUserForm from '../components/users/InviteUserForm';
 import PaginationControls from '../components/users/PaginationControls';
 import UsersList from '../components/users/UsersList';
 
 export default function UsersPage() {
+  const {user} = useAuth();
   const [page, setPage] = useState(1);
 
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState('STAFF');
   const [inviteLink, setInviteLink] = useState('');
+  const currentUserId = user?._id ?? user?.id;
+  const isAdmin = user?.role === 'ADMIN';
 
   const usersQuery = useQuery({
     queryKey: ['users', page],
@@ -55,8 +59,12 @@ export default function UsersPage() {
 
   const handleRoleChange = (id, role) => roleMutation.mutate({id, role});
 
-  const handleStatusToggle = (id, status) =>
+  const handleStatusToggle = (id, status) => {
+    if (isAdmin && currentUserId && id === currentUserId) {
+      return;
+    }
     statusMutation.mutate({id, status});
+  };
 
   return (
     <div className="space-y-6">
@@ -82,6 +90,8 @@ export default function UsersPage() {
           isError={usersQuery.isError}
           onRoleChange={handleRoleChange}
           onStatusToggle={handleStatusToggle}
+          currentUserId={currentUserId}
+          isAdmin={isAdmin}
         />
 
         <PaginationControls

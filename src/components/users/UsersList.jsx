@@ -6,6 +6,8 @@ export default function UsersList({
   isError,
   onRoleChange,
   onStatusToggle,
+  currentUserId,
+  isAdmin,
   emptyMessage = null,
 }) {
   return (
@@ -20,6 +22,8 @@ export default function UsersList({
             user={user}
             onRoleChange={onRoleChange}
             onStatusToggle={onStatusToggle}
+            currentUserId={currentUserId}
+            isAdmin={isAdmin}
           />
         ))}
 

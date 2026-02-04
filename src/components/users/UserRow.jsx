@@ -4,9 +4,13 @@ export default function UserRow({
   user,
   onRoleChange,
   onStatusToggle,
-  onDelete,
+  currentUserId,
+  isAdmin,
 }) {
   const isActive = user.status === 'ACTIVE';
+  const userId = user._id ?? user.id;
+  const isSelfRestricted =
+    isAdmin && currentUserId && userId && currentUserId === userId;
   const statusButtonClasses = isActive
     ? 'border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 active:bg-emerald-200'
     : 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 active:bg-amber-200';
@@ -30,20 +34,20 @@ export default function UserRow({
         />
 
         <button
-          className={`px-3 py-1.5 rounded border transition-colors ${statusButtonClasses}`}
+          className={`px-3 py-1.5 rounded border transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${statusButtonClasses}`}
           onClick={() =>
             onStatusToggle?.(user._id, isActive ? 'INACTIVE' : 'ACTIVE')
           }
+          disabled={isSelfRestricted}
         >
           {isActive ? 'Deactivate' : 'Activate'}
         </button>
 
-        <button
-          className="px-3 py-1.5 rounded border border-red-300 bg-red-50 text-red-700 hover:bg-red-100 active:bg-red-200 transition-colors"
-          onClick={() => onDelete?.(user.id)}
-        >
-          Delete
-        </button>
+        {isSelfRestricted && (
+          <span className="self-center text-xs text-gray-500">
+            You can&apos;t deactivate your own account.
+          </span>
+        )}
       </div>
     </div>
   );
