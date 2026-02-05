@@ -7,7 +7,7 @@ import {
   updateUserStatusApi,
 } from '../api/users.api';
 import {queryClient} from '../app/queryClient';
-import {useAuth} from '../auth/AuthProvider';
+import {useAuth} from '../auth/authContext';
 import Card from '../components/ui/Card';
 import InviteLinkPanel from '../components/users/InviteLinkPanel';
 import InviteUserForm from '../components/users/InviteUserForm';

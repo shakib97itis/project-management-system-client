@@ -1,21 +1,21 @@
 import React, {
-  createContext,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
-import {logoutApi} from '../api/auth.api';
+import {logoutApi, meApi} from '../api/auth.api';
 import {refreshAccessToken} from '../api/axios';
 import {clearAccessToken} from '../utils/accessToken';
 import {clearAuthUser, getAuthUser, setAuthUser} from '../utils/storage';
-
-const AuthCtx = createContext(null);
+import {AuthCtx} from './authContext';
 
 export function AuthProvider({children}) {
   const [user, setUser] = useState(() => getAuthUser());
   const [isLoading, setIsLoading] = useState(true);
+  const lastRefreshAtRef = useRef(0);
+  const refreshInFlightRef = useRef(null);
 
   useEffect(() => {
     if (user) {
@@ -25,23 +25,75 @@ export function AuthProvider({children}) {
     }
   }, [user]);
 
+  const clearLocalAuthState = useCallback(() => {
+    clearAccessToken();
+    clearAuthUser();
+    setUser(null);
+  }, [setUser]);
+
+  const refreshUser = useCallback(
+    async ({force = false} = {}) => {
+      const now = Date.now();
+      if (!force && now - lastRefreshAtRef.current < 10_000) {
+        return null;
+      }
+
+      if (refreshInFlightRef.current) {
+        return refreshInFlightRef.current;
+      }
+
+      lastRefreshAtRef.current = now;
+
+      refreshInFlightRef.current = (async () => {
+        try {
+          const data = await meApi();
+          if (data?.user) {
+            setUser(data.user);
+          }
+          return data?.user || null;
+        } catch (error) {
+          const status = error?.response?.status;
+          if (status === 401 || status === 403) {
+            try {
+              await logoutApi();
+            } catch {
+              // Ignore logout errors and still clear local state.
+            }
+            clearLocalAuthState();
+            return null;
+          }
+
+          // Non-auth errors shouldn't force a logout; keep existing cached user.
+          return null;
+        } finally {
+          refreshInFlightRef.current = null;
+        }
+      })();
+
+      return refreshInFlightRef.current;
+    },
+    [clearLocalAuthState, setUser],
+  );
+
   useEffect(() => {
     let isMounted = true;
 
     const initAuth = async () => {
       // Refresh on boot to hydrate access token; logout clears stale local state.
       try {
-        await refreshAccessToken();
-      } catch (error) {
+        const refreshResult = await refreshAccessToken();
+        if (isMounted && refreshResult?.user) {
+          setUser(refreshResult.user);
+        }
+        await refreshUser({force: true});
+      } catch {
         if (isMounted) {
           try {
             await logoutApi();
-          } catch (logoutError) {
+          } catch {
             // Ignore logout errors during init.
           }
-          clearAccessToken();
-          clearAuthUser();
-          setUser(null);
+          clearLocalAuthState();
         }
       } finally {
         if (isMounted) {
@@ -56,34 +108,44 @@ export function AuthProvider({children}) {
       isMounted = false;
     };
   }, [
-    refreshAccessToken,
-    logoutApi,
-    clearAccessToken,
-    clearAuthUser,
-    setUser,
-    setIsLoading,
+    clearLocalAuthState,
+    refreshUser,
   ]);
+
+  useEffect(() => {
+    if (!user) return undefined;
+
+    const handleFocus = () => {
+      refreshUser();
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        refreshUser();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [user, refreshUser]);
 
   const logout = useCallback(async () => {
     try {
       await logoutApi();
-    } catch (error) {
+    } catch {
       // Ignore logout errors and still clear local state.
     }
-    clearAccessToken();
-    clearAuthUser();
-    setUser(null);
-  }, [logoutApi, clearAccessToken, clearAuthUser, setUser]);
+    clearLocalAuthState();
+  }, [clearLocalAuthState]);
 
   const value = useMemo(
-    () => ({user, setUser, logout, isAuthed: !!user, isLoading}),
-    [user, setUser, logout, isLoading],
+    () => ({user, setUser, refreshUser, logout, isAuthed: !!user, isLoading}),
+    [user, setUser, refreshUser, logout, isLoading],
   );
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
-}
-
-export function useAuth() {
-  const value = useContext(AuthCtx);
-  if (!value) throw new Error('useAuth must be used inside AuthProvider');
-  return value;
 }

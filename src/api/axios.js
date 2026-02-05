@@ -26,12 +26,12 @@ export const refreshAccessToken = async () => {
     refreshPromise = refreshClient
       .post('/auth/refresh')
       .then(({data}) => {
-        const token = data?.accessToken;
-        if (!token) {
+        const accessToken = data?.accessToken;
+        if (!accessToken) {
           throw new Error('No access token returned');
         }
-        setAccessToken(token);
-        return token;
+        setAccessToken(accessToken);
+        return {accessToken, user: data?.user};
       })
       .finally(() => {
         refreshPromise = null;
@@ -46,7 +46,7 @@ const logoutAndRedirect = async () => {
   clearAuthUser();
   try {
     await refreshClient.post('/auth/logout');
-  } catch (error) {
+  } catch {
     // Ignore logout errors and still redirect.
   }
   if (window.location.pathname !== '/login') {
@@ -80,11 +80,11 @@ api.interceptors.response.use(
 
     originalRequest._retry = true;
     try {
-      const token = await refreshAccessToken();
+      const {accessToken} = await refreshAccessToken();
       originalRequest.headers = originalRequest.headers || {};
-      originalRequest.headers.Authorization = `Bearer ${token}`;
+      originalRequest.headers.Authorization = `Bearer ${accessToken}`;
       return api(originalRequest);
-    } catch (refreshError) {
+    } catch {
       await logoutAndRedirect();
       return Promise.reject(error);
     }

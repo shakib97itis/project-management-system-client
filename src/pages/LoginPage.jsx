@@ -3,7 +3,7 @@ import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { loginApi } from '../api/auth.api';
-import { useAuth } from '../auth/AuthProvider';
+import { useAuth } from '../auth/authContext';
 import { setAccessToken } from '../utils/accessToken';
 import { getApiErrorMessage } from '../utils/errors';
 

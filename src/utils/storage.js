@@ -8,7 +8,7 @@ export const getAuthUser = () => {
   if (!raw) return null;
   try {
     return JSON.parse(raw);
-  } catch (error) {
+  } catch {
     return null;
   }
 };

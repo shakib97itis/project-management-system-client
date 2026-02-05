@@ -1,3 +1,4 @@
+import {createElement} from 'react';
 import {classNames} from '../../utils/classNames';
 
 export default function Card({
@@ -6,12 +7,12 @@ export default function Card({
   children,
   ...rest
 }) {
-  return (
-    <Component
-      className={classNames('bg-white rounded-xl shadow p-6', className)}
-      {...rest}
-    >
-      {children}
-    </Component>
+  return createElement(
+    Component,
+    {
+      className: classNames('bg-white rounded-xl shadow p-6', className),
+      ...rest,
+    },
+    children,
   );
 }

@@ -7,7 +7,7 @@ import {
   updateProjectApi,
 } from '../api/projects.api';
 import {queryClient} from '../app/queryClient';
-import {useAuth} from '../auth/AuthProvider';
+import {useAuth} from '../auth/authContext';
 import ProjectCreateForm from '../components/projects/ProjectCreateForm';
 import ProjectItem from '../components/projects/ProjectItem';
 import ProjectsList from '../components/projects/ProjectsList';

@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { registerViaInviteApi } from '../api/auth.api';
-import { useAuth } from '../auth/AuthProvider';
+import { useAuth } from '../auth/authContext';
 import Button from '../components/ui/Button';
 import TextInput from '../components/ui/TextInput';
 import { setAccessToken } from '../utils/accessToken';
