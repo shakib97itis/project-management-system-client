@@ -11,8 +11,14 @@ import {useAuth} from '../auth/authContext';
 import ProjectCreateForm from '../components/projects/ProjectCreateForm';
 import ProjectItem from '../components/projects/ProjectItem';
 import ProjectsList from '../components/projects/ProjectsList';
+import Tabs from '../components/ui/Tabs';
 import Card from '../components/ui/Card';
 import {getApiErrorMessage} from '../utils/errors';
+
+const PROJECT_TABS = {
+  ACTIVE: 'ACTIVE',
+  ARCHIVED: 'ARCHIVED',
+};
 
 export default function ProjectsPage() {
   const {user} = useAuth();
@@ -24,6 +30,7 @@ export default function ProjectsPage() {
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [editStatus, setEditStatus] = useState('');
+  const [activeTab, setActiveTab] = useState(PROJECT_TABS.ACTIVE);
 
   const projectsQuery = useQuery({
     queryKey: ['projects'],
@@ -87,6 +94,22 @@ export default function ProjectsPage() {
     () => (projectsQuery.data || []).filter((p) => !p.isDeleted),
     [projectsQuery.data],
   );
+
+  const {activeProjects, archivedProjects} = useMemo(() => {
+    const active = [];
+    const archived = [];
+    for (const project of projects) {
+      if (project.status === PROJECT_TABS.ARCHIVED) {
+        archived.push(project);
+      } else {
+        active.push(project);
+      }
+    }
+    return {activeProjects: active, archivedProjects: archived};
+  }, [projects]);
+
+  const visibleProjects =
+    activeTab === PROJECT_TABS.ARCHIVED ? archivedProjects : activeProjects;
 
   const startEdit = (project) => {
     setEditingId(project._id);
@@ -169,11 +192,33 @@ export default function ProjectsPage() {
       </Card>
 
       <Card>
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <h2 className="text-lg font-semibold">All Projects</h2>
+          <Tabs
+            activeKey={activeTab}
+            onChange={setActiveTab}
+            tabs={[
+              {
+                key: PROJECT_TABS.ACTIVE,
+                label: `Active (${activeProjects.length})`,
+              },
+              {
+                key: PROJECT_TABS.ARCHIVED,
+                label: `Archived (${archivedProjects.length})`,
+              },
+            ]}
+          />
+        </div>
+
         <ProjectsList
-          projects={projects}
+          projects={visibleProjects}
           isLoading={projectsQuery.isLoading}
           isError={projectsQuery.isError}
-          emptyMessage="No projects yet."
+          emptyMessage={
+            activeTab === PROJECT_TABS.ARCHIVED
+              ? 'No archived projects yet.'
+              : 'No active projects yet.'
+          }
           renderItem={(project) => (
             <ProjectItem
               key={project._id}

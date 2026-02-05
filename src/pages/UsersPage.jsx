@@ -13,10 +13,16 @@ import InviteLinkPanel from '../components/users/InviteLinkPanel';
 import InviteUserForm from '../components/users/InviteUserForm';
 import PaginationControls from '../components/users/PaginationControls';
 import UsersList from '../components/users/UsersList';
+import Tabs from '../components/ui/Tabs';
 import {getUserId} from '../utils/ids';
 
 const USERS_QUERY_KEY = ['users'];
 const PAGE_SIZE = 10;
+
+const USER_TABS = {
+  ACTIVE: 'ACTIVE',
+  INACTIVE: 'INACTIVE',
+};
 
 const buildInviteLink = (response) => {
   // API may return a full invite link or a token to build the registration URL.
@@ -30,6 +36,7 @@ const buildInviteLink = (response) => {
 export default function UsersPage() {
   const {user} = useAuth();
   const [currentPage, setCurrentPage] = useState(1);
+  const [activeTab, setActiveTab] = useState(USER_TABS.ACTIVE);
 
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState('STAFF');
@@ -38,8 +45,8 @@ export default function UsersPage() {
   const isAdmin = user?.role === 'ADMIN';
 
   const usersQuery = useQuery({
-    queryKey: [...USERS_QUERY_KEY, currentPage],
-    queryFn: () => getUsersApi(currentPage, PAGE_SIZE),
+    queryKey: [...USERS_QUERY_KEY, activeTab, currentPage],
+    queryFn: () => getUsersApi(currentPage, PAGE_SIZE, activeTab),
     keepPreviousData: true,
   });
 
@@ -62,8 +69,16 @@ export default function UsersPage() {
     onSuccess: () => queryClient.invalidateQueries({queryKey: USERS_QUERY_KEY}),
   });
 
-  const items = usersQuery.data?.items || [];
+  const items = (usersQuery.data?.items || []).filter(
+    (u) => u.status === activeTab,
+  );
+  const isUsersLoading = usersQuery.isLoading || usersQuery.isFetching;
   const isInviting = inviteMutation.isPending;
+
+  const handleTabChange = (nextTab) => {
+    setActiveTab(nextTab);
+    setCurrentPage(1);
+  };
 
   const handleInvite = () =>
     inviteMutation.mutate({email: inviteEmail, role: inviteRole});
@@ -95,14 +110,31 @@ export default function UsersPage() {
       </Card>
 
       <Card>
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <h2 className="text-lg font-semibold">Users</h2>
+          <Tabs
+            activeKey={activeTab}
+            onChange={handleTabChange}
+            tabs={[
+              {key: USER_TABS.ACTIVE, label: 'Active Users'},
+              {key: USER_TABS.INACTIVE, label: 'Inactive Users'},
+            ]}
+          />
+        </div>
+
         <UsersList
           users={items}
-          isLoading={usersQuery.isLoading}
+          isLoading={isUsersLoading}
           isError={usersQuery.isError}
           onRoleChange={handleRoleChange}
           onStatusToggle={handleStatusToggle}
           currentUserId={currentUserId}
           isAdmin={isAdmin}
+          emptyMessage={
+            activeTab === USER_TABS.INACTIVE
+              ? 'No inactive users found.'
+              : 'No active users found.'
+          }
         />
 
         <PaginationControls

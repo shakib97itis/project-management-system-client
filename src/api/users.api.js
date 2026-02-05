@@ -1,7 +1,7 @@
 import { api } from './axios';
 
-export const getUsersApi = async (page = 1, limit = 10) => {
-  const { data } = await api.get('/users', { params: { page, limit } });
+export const getUsersApi = async (page = 1, limit = 10, status) => {
+  const { data } = await api.get('/users', { params: { page, limit, status } });
   return data; // {items,total,page,limit}
 };
 
