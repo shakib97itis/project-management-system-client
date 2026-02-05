@@ -6,18 +6,14 @@ import React, {
   useMemo,
   useState,
 } from 'react';
-import { logoutApi } from '../api/auth.api';
-import { refreshAccessToken } from '../api/axios';
-import { clearAccessToken } from '../utils/accessToken';
-import {
-  clearAuthUser,
-  getAuthUser,
-  setAuthUser,
-} from '../utils/storage';
+import {logoutApi} from '../api/auth.api';
+import {refreshAccessToken} from '../api/axios';
+import {clearAccessToken} from '../utils/accessToken';
+import {clearAuthUser, getAuthUser, setAuthUser} from '../utils/storage';
 
 const AuthCtx = createContext(null);
 
-export function AuthProvider({ children }) {
+export function AuthProvider({children}) {
   const [user, setUser] = useState(() => getAuthUser());
   const [isLoading, setIsLoading] = useState(true);
 
@@ -33,6 +29,7 @@ export function AuthProvider({ children }) {
     let isMounted = true;
 
     const initAuth = async () => {
+      // Refresh on boot to hydrate access token; logout clears stale local state.
       try {
         await refreshAccessToken();
       } catch (error) {
@@ -79,7 +76,7 @@ export function AuthProvider({ children }) {
   }, [logoutApi, clearAccessToken, clearAuthUser, setUser]);
 
   const value = useMemo(
-    () => ({ user, setUser, logout, isAuthed: !!user, isLoading }),
+    () => ({user, setUser, logout, isAuthed: !!user, isLoading}),
     [user, setUser, logout, isLoading],
   );
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;

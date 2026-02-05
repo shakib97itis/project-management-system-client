@@ -1,4 +1,5 @@
 import RoleSelect from './RoleSelect';
+import { getUserId } from '../../utils/ids';
 
 export default function UserRow({
   user,
@@ -8,7 +9,8 @@ export default function UserRow({
   isAdmin,
 }) {
   const isActive = user.status === 'ACTIVE';
-  const userId = user._id ?? user.id;
+  const userId = getUserId(user);
+  // Prevent admins from deactivating their own account.
   const isSelfRestricted =
     isAdmin && currentUserId && userId && currentUserId === userId;
   const statusButtonClasses = isActive
@@ -30,13 +32,13 @@ export default function UserRow({
       <div className="flex gap-2">
         <RoleSelect
           value={user.role}
-          onChange={(role) => onRoleChange?.(user._id, role)}
+          onChange={(role) => onRoleChange?.(userId, role)}
         />
 
         <button
           className={`px-3 py-1.5 rounded border transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${statusButtonClasses}`}
           onClick={() =>
-            onStatusToggle?.(user._id, isActive ? 'INACTIVE' : 'ACTIVE')
+            onStatusToggle?.(userId, isActive ? 'INACTIVE' : 'ACTIVE')
           }
           disabled={isSelfRestricted}
         >

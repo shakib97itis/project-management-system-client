@@ -1,3 +1,7 @@
+import Button from '../ui/Button';
+import InlineMessage from '../ui/InlineMessage';
+import TextInput from '../ui/TextInput';
+
 export default function ProjectCreateForm({
   name,
   description,
@@ -10,30 +14,33 @@ export default function ProjectCreateForm({
   return (
     <>
       <div className="mt-4 grid gap-2 md:grid-cols-3">
-        <input
-          className="border rounded px-3 py-2"
+        <TextInput
           placeholder="Name"
           value={name}
           onChange={(event) => onNameChange(event.target.value)}
         />
-        <input
-          className="border rounded px-3 py-2 md:col-span-2"
+        <TextInput
+          className="md:col-span-2"
           placeholder="Description"
           value={description}
           onChange={(event) => onDescriptionChange(event.target.value)}
         />
       </div>
 
-      <button
-        className="mt-3 px-4 py-2 rounded bg-gray-900 text-white"
+      <Button
+        className="mt-3"
         disabled={isSubmitting}
         onClick={onSubmit}
+        isLoading={isSubmitting}
+        loadingLabel="Creating..."
       >
-        {isSubmitting ? 'Creating...' : 'Create Project'}
-      </button>
+        Create Project
+      </Button>
 
       {errorMessage && (
-        <p className="mt-2 text-sm text-red-600">{errorMessage}</p>
+        <InlineMessage className="mt-2 text-sm" tone="error">
+          {errorMessage}
+        </InlineMessage>
       )}
     </>
   );

@@ -3,7 +3,10 @@ import { useMutation } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { registerViaInviteApi } from '../api/auth.api';
 import { useAuth } from '../auth/AuthProvider';
+import Button from '../components/ui/Button';
+import TextInput from '../components/ui/TextInput';
 import { setAccessToken } from '../utils/accessToken';
+import { getApiErrorMessage } from '../utils/errors';
 
 export default function InviteRegisterPage() {
   const [searchParams] = useSearchParams();
@@ -27,6 +30,10 @@ export default function InviteRegisterPage() {
     },
   });
 
+  const errorMessage = registerMutation.isError
+    ? getApiErrorMessage(registerMutation.error, 'Registration failed')
+    : null;
+
   return (
     <div className="min-h-screen grid place-items-center bg-gray-50">
       <div className="w-full max-w-md bg-white p-6 rounded-xl shadow">
@@ -39,37 +46,36 @@ export default function InviteRegisterPage() {
         )}
 
         <div className="mt-4 space-y-3">
-          <input
-            className="w-full border rounded px-3 py-2"
+          <TextInput
+            className="w-full"
             placeholder="Full name"
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
 
-          <input
-            className="w-full border rounded px-3 py-2"
+          <TextInput
+            className="w-full"
             placeholder="Set password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
 
-          {registerMutation.isError && (
-            <p className="text-sm text-red-600">
-              {registerMutation.error?.response?.data?.message ||
-                'Registration failed'}
-            </p>
+          {errorMessage && (
+            <p className="text-sm text-red-600">{errorMessage}</p>
           )}
 
-          <button
-            className="w-full bg-gray-900 text-white rounded px-3 py-2 disabled:opacity-50"
+          <Button
+            className="w-full"
             disabled={!token || registerMutation.isPending}
+            isLoading={registerMutation.isPending}
+            loadingLabel="Creating account..."
             onClick={() =>
               registerMutation.mutate({ token, name, password })
             }
           >
-            {registerMutation.isPending ? 'Creating account...' : 'Register'}
-          </button>
+            Register
+          </Button>
         </div>
       </div>
     </div>

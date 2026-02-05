@@ -1,19 +1,21 @@
-import { useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import {useMemo, useState} from 'react';
+import {useMutation, useQuery} from '@tanstack/react-query';
 import {
   createProjectApi,
   deleteProjectApi,
   getProjectsApi,
   updateProjectApi,
 } from '../api/projects.api';
-import { queryClient } from '../app/queryClient';
-import { useAuth } from '../auth/AuthProvider';
+import {queryClient} from '../app/queryClient';
+import {useAuth} from '../auth/AuthProvider';
 import ProjectCreateForm from '../components/projects/ProjectCreateForm';
 import ProjectItem from '../components/projects/ProjectItem';
 import ProjectsList from '../components/projects/ProjectsList';
+import Card from '../components/ui/Card';
+import {getApiErrorMessage} from '../utils/errors';
 
 export default function ProjectsPage() {
-  const { user } = useAuth();
+  const {user} = useAuth();
   const isAdmin = user?.role === 'ADMIN';
 
   const [name, setName] = useState('');
@@ -33,38 +35,39 @@ export default function ProjectsPage() {
     onSuccess: () => {
       setName('');
       setDescription('');
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({queryKey: ['projects']});
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteProjectApi,
     onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: ['projects'] });
+      // Optimistically update the list for a faster UI, then rollback on error.
+      await queryClient.cancelQueries({queryKey: ['projects']});
       const prev = queryClient.getQueryData(['projects']) || [];
       queryClient.setQueryData(['projects'], (old = []) =>
         old.filter((p) => p._id !== id),
       );
-      return { prev };
+      return {prev};
     },
     onError: (_err, _id, ctx) => {
       if (ctx?.prev) {
         queryClient.setQueryData(['projects'], ctx.prev);
       }
     },
-    onSettled: () =>
-      queryClient.invalidateQueries({ queryKey: ['projects'] }),
+    onSettled: () => queryClient.invalidateQueries({queryKey: ['projects']}),
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, payload }) => updateProjectApi(id, payload),
-    onMutate: async ({ id, payload }) => {
-      await queryClient.cancelQueries({ queryKey: ['projects'] });
+    mutationFn: ({id, payload}) => updateProjectApi(id, payload),
+    onMutate: async ({id, payload}) => {
+      // Optimistically update the cache so edits appear immediately.
+      await queryClient.cancelQueries({queryKey: ['projects']});
       const prev = queryClient.getQueryData(['projects']) || [];
       queryClient.setQueryData(['projects'], (old = []) =>
-        old.map((p) => (p._id === id ? { ...p, ...payload } : p)),
+        old.map((p) => (p._id === id ? {...p, ...payload} : p)),
       );
-      return { prev };
+      return {prev};
     },
     onError: (_err, _vars, ctx) => {
       if (ctx?.prev) {
@@ -77,8 +80,7 @@ export default function ProjectsPage() {
       setEditDescription('');
       setEditStatus('');
     },
-    onSettled: () =>
-      queryClient.invalidateQueries({ queryKey: ['projects'] }),
+    onSettled: () => queryClient.invalidateQueries({queryKey: ['projects']}),
   });
 
   const projects = useMemo(
@@ -115,9 +117,6 @@ export default function ProjectsPage() {
     });
   };
 
-  const resolveErrorMessage = (error, fallback) =>
-    error?.response?.data?.message || fallback;
-
   const isSaveDisabled = (project) => {
     const trimmedName = editName.trim();
     const trimmedDescription = editDescription.trim();
@@ -132,16 +131,16 @@ export default function ProjectsPage() {
     );
   };
 
-  const handleCreate = () => createMutation.mutate({ name, description });
+  const handleCreate = () => createMutation.mutate({name, description});
 
   const handleDelete = (project) => deleteMutation.mutate(project._id);
 
   const createErrorMessage = createMutation.isError
-    ? resolveErrorMessage(createMutation.error, 'Create failed')
+    ? getApiErrorMessage(createMutation.error, 'Create failed')
     : null;
 
   const updateErrorMessage = updateMutation.isError
-    ? resolveErrorMessage(updateMutation.error, 'Update failed')
+    ? getApiErrorMessage(updateMutation.error, 'Update failed')
     : null;
 
   const editValues = {
@@ -155,7 +154,7 @@ export default function ProjectsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-xl shadow p-6">
+      <Card>
         <h1 className="text-xl font-semibold">Projects</h1>
 
         <ProjectCreateForm
@@ -167,9 +166,9 @@ export default function ProjectsPage() {
           isSubmitting={createMutation.isPending}
           errorMessage={createErrorMessage}
         />
-      </div>
+      </Card>
 
-      <div className="bg-white rounded-xl shadow p-6">
+      <Card>
         <ProjectsList
           projects={projects}
           isLoading={projectsQuery.isLoading}
@@ -192,14 +191,12 @@ export default function ProjectsPage() {
               isSaveDisabled={isSaveDisabled(project)}
               canManage={isAdmin}
               errorMessage={
-                hasUpdateErrorFor(project._id)
-                  ? updateErrorMessage
-                  : null
+                hasUpdateErrorFor(project._id) ? updateErrorMessage : null
               }
             />
           )}
         />
-      </div>
+      </Card>
     </div>
   );
 }

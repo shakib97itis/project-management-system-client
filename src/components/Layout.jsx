@@ -31,7 +31,7 @@ export default function Layout() {
 
           <div className="flex items-center gap-3">
             <span className="text-sm text-gray-600">
-              {user?.email} • {user?.role}
+              {user?.email} | {user?.role}
             </span>
             <button
               className="px-3 py-1.5 rounded bg-gray-900 text-white text-sm"

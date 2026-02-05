@@ -1,16 +1,17 @@
-import {useState} from 'react';
-import {EyeIcon, EyeSlashIcon} from '@heroicons/react/24/outline';
-import {useMutation} from '@tanstack/react-query';
-import {useNavigate} from 'react-router-dom';
-import {loginApi} from '../api/auth.api';
-import {useAuth} from '../auth/AuthProvider';
-import {setAccessToken} from '../utils/accessToken';
+import { useState } from 'react';
+import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import { useMutation } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
+import { loginApi } from '../api/auth.api';
+import { useAuth } from '../auth/AuthProvider';
+import { setAccessToken } from '../utils/accessToken';
+import { getApiErrorMessage } from '../utils/errors';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  const {setUser} = useAuth();
+  const { setUser } = useAuth();
   const navigate = useNavigate();
 
   const loginMutation = useMutation({
@@ -22,14 +23,13 @@ export default function LoginPage() {
     },
   });
 
-  const errorMessage =
-    loginMutation.error?.response?.data?.message || 'Login failed';
+  const errorMessage = getApiErrorMessage(loginMutation.error, 'Login failed');
   const isSubmitting = loginMutation.isPending;
   const hasError = loginMutation.isError;
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    loginMutation.mutate({email, password});
+    loginMutation.mutate({ email, password });
   };
 
   return (

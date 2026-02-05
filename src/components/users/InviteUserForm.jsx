@@ -1,3 +1,5 @@
+import Button from '../ui/Button';
+import TextInput from '../ui/TextInput';
 import RoleSelect from './RoleSelect';
 
 export default function InviteUserForm({
@@ -10,8 +12,7 @@ export default function InviteUserForm({
 }) {
   return (
     <div className="mt-4 grid gap-2 md:grid-cols-3">
-      <input
-        className="border rounded px-3 py-2"
+      <TextInput
         placeholder="Invite email"
         value={email}
         onChange={(e) => onEmailChange(e.target.value)}
@@ -23,13 +24,15 @@ export default function InviteUserForm({
         onChange={onRoleChange}
       />
 
-      <button
-        className="rounded bg-gray-900 text-white px-3 py-2"
+      <Button
+        className="px-3 py-2"
         onClick={onSubmit}
         disabled={isSubmitting}
+        isLoading={isSubmitting}
+        loadingLabel="Inviting..."
       >
-        {isSubmitting ? 'Inviting...' : 'Send Invite'}
-      </button>
+        Send Invite
+      </Button>
     </div>
   );
 }

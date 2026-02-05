@@ -1,3 +1,12 @@
+import InlineMessage from '../ui/InlineMessage';
+import SelectInput from '../ui/SelectInput';
+import TextInput from '../ui/TextInput';
+
+const STATUS_OPTIONS = [
+  { value: 'ACTIVE', label: 'ACTIVE' },
+  { value: 'ARCHIVED', label: 'ARCHIVED' },
+];
+
 export default function ProjectEditFields({
   name,
   description,
@@ -9,28 +18,28 @@ export default function ProjectEditFields({
 }) {
   return (
     <div className="space-y-2">
-      <input
-        className="w-full border rounded px-3 py-2"
+      <TextInput
+        className="w-full"
         placeholder="Name"
         value={name}
         onChange={(event) => onNameChange(event.target.value)}
       />
-      <input
-        className="w-full border rounded px-3 py-2"
+      <TextInput
+        className="w-full"
         placeholder="Description"
         value={description}
         onChange={(event) => onDescriptionChange(event.target.value)}
       />
-      <select
-        className="w-full border rounded px-3 py-2"
+      <SelectInput
+        className="w-full"
         value={status}
         onChange={(event) => onStatusChange(event.target.value)}
-      >
-        <option value="ACTIVE">ACTIVE</option>
-        <option value="ARCHIVED">ARCHIVED</option>
-      </select>
+        options={STATUS_OPTIONS}
+      />
       {errorMessage && (
-        <p className="text-xs text-red-600">{errorMessage}</p>
+        <InlineMessage className="text-xs" tone="error">
+          {errorMessage}
+        </InlineMessage>
       )}
     </div>
   );

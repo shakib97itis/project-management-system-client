@@ -4,7 +4,7 @@ import {
   getAccessToken,
   setAccessToken,
 } from '../utils/accessToken';
-import { clearAuthUser } from '../utils/storage';
+import {clearAuthUser} from '../utils/storage';
 
 const baseURL = import.meta.env.VITE_API_BASE_URL;
 
@@ -18,13 +18,14 @@ const refreshClient = axios.create({
   withCredentials: true,
 });
 
+// Single-flight refresh so concurrent 401s share one refresh request.
 let refreshPromise = null;
 
 export const refreshAccessToken = async () => {
   if (!refreshPromise) {
     refreshPromise = refreshClient
       .post('/auth/refresh')
-      .then(({ data }) => {
+      .then(({data}) => {
         const token = data?.accessToken;
         if (!token) {
           throw new Error('No access token returned');
@@ -72,6 +73,7 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
+    // Avoid infinite refresh loops or calls that opt out of refresh.
     if (originalRequest.skipAuthRefresh || originalRequest._retry) {
       return Promise.reject(error);
     }

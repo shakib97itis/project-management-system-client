@@ -10,7 +10,7 @@ export default function DashboardPage() {
         Welcome, <span className="font-medium">{user?.name}</span>
       </p>
       <p className="text-sm text-gray-500 mt-1">
-        Role: {user?.role} • Status: {user?.status}
+        Role: {user?.role} | Status: {user?.status}
       </p>
     </div>
   );

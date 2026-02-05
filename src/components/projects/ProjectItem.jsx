@@ -1,3 +1,4 @@
+import Button from '../ui/Button';
 import ProjectEditFields from './ProjectEditFields';
 
 function ProjectDetails({ project }) {
@@ -50,35 +51,40 @@ export default function ProjectItem({
         <div className="flex items-center gap-2">
           {isEditing ? (
             <>
-              <button
-                className="px-3 py-1.5 rounded bg-gray-900 text-white disabled:opacity-60"
-                disabled={isSaving || isSaveDisabled}
+              <Button
+                size="sm"
+                disabled={isSaveDisabled}
+                isLoading={isSaving}
+                loadingLabel="Saving..."
                 onClick={() => onSaveEdit(project)}
               >
-                {isSaving ? 'Saving...' : 'Save'}
-              </button>
-              <button
-                className="px-3 py-1.5 rounded border"
+                Save
+              </Button>
+              <Button
+                size="sm"
+                variant="secondary"
                 disabled={isSaving}
                 onClick={onCancelEdit}
               >
                 Cancel
-              </button>
+              </Button>
             </>
           ) : (
             <>
-              <button
-                className="px-3 py-1.5 rounded border"
+              <Button
+                size="sm"
+                variant="secondary"
                 onClick={() => onStartEdit(project)}
               >
                 Edit
-              </button>
-              <button
-                className="px-3 py-1.5 rounded bg-red-600 text-white"
+              </Button>
+              <Button
+                size="sm"
+                variant="danger"
                 onClick={() => onDelete(project)}
               >
                 Delete
-              </button>
+              </Button>
             </>
           )}
         </div>

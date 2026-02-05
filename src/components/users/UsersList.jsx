@@ -1,4 +1,6 @@
+import DataList from '../ui/DataList';
 import UserRow from './UserRow';
+import { getUserId } from '../../utils/ids';
 
 export default function UsersList({
   users,
@@ -11,26 +13,23 @@ export default function UsersList({
   emptyMessage = null,
 }) {
   return (
-    <>
-      {isLoading && <p>Loading users...</p>}
-      {isError && <p className="text-red-600">Failed to load users</p>}
-
-      <div className="space-y-3">
-        {users.map((user) => (
-          <UserRow
-            key={user.id}
-            user={user}
-            onRoleChange={onRoleChange}
-            onStatusToggle={onStatusToggle}
-            currentUserId={currentUserId}
-            isAdmin={isAdmin}
-          />
-        ))}
-
-        {!isLoading && users.length === 0 && emptyMessage && (
-          <p className="text-sm text-gray-500">{emptyMessage}</p>
-        )}
-      </div>
-    </>
+    <DataList
+      items={users}
+      isLoading={isLoading}
+      isError={isError}
+      emptyMessage={emptyMessage}
+      loadingMessage="Loading users..."
+      errorMessage="Failed to load users"
+      renderItem={(user) => (
+        <UserRow
+          key={getUserId(user) || user.email}
+          user={user}
+          onRoleChange={onRoleChange}
+          onStatusToggle={onStatusToggle}
+          currentUserId={currentUserId}
+          isAdmin={isAdmin}
+        />
+      )}
+    />
   );
 }
