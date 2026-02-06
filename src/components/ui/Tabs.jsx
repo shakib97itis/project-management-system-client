@@ -4,7 +4,7 @@ export default function Tabs({ tabs, activeKey, onChange, className }) {
   return (
     <div
       className={classNames(
-        'inline-flex items-center rounded-lg border border-gray-200 bg-white p-1',
+        'inline-flex items-center rounded-control border border-border bg-surface p-1',
         className,
       )}
       role="tablist"
@@ -19,10 +19,10 @@ export default function Tabs({ tabs, activeKey, onChange, className }) {
             role="tab"
             aria-selected={isActive}
             className={classNames(
-              'rounded-md px-3 py-1.5 text-sm font-medium transition',
+              'rounded-control px-3 py-1.5 text-sm font-medium transition',
               isActive
-                ? 'bg-gray-900 text-white'
-                : 'text-gray-700 hover:bg-gray-100',
+                ? 'bg-brand text-brand-foreground shadow-card'
+                : 'text-foreground/80 hover:bg-surface-muted',
             )}
             onClick={() => onChange?.(tab.key)}
           >

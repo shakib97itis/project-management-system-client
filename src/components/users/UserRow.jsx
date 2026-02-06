@@ -1,4 +1,5 @@
 import RoleSelect from './RoleSelect';
+import RoleBadge from './RoleBadge';
 import { getUserId } from '../../utils/ids';
 
 export default function UserRow({
@@ -24,8 +25,9 @@ export default function UserRow({
           {user.name}{' '}
           <span className="text-xs text-gray-500">({user.email})</span>
         </div>
-        <div className="text-xs text-gray-500">
-          Role: {user.role} - Status: {user.status}
+        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+          <RoleBadge role={user.role} />
+          <span>Status: {user.status}</span>
         </div>
       </div>
 

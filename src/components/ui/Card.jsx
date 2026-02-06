@@ -10,7 +10,7 @@ export default function Card({
   return createElement(
     Component,
     {
-      className: classNames('bg-white rounded-xl shadow p-6', className),
+      className: classNames('ds-card', className),
       ...rest,
     },
     children,

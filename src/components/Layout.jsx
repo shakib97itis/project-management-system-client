@@ -1,9 +1,18 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/authContext';
+import RoleBadge from './users/RoleBadge';
+import { classNames } from '../utils/classNames';
+import Button from './ui/Button';
 
 export default function Layout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+
+  const navLinkClassName = ({ isActive }) =>
+    classNames(
+      'ds-nav-link',
+      isActive ? 'ds-nav-link-active' : 'ds-nav-link-inactive',
+    );
 
   const handleLogout = async () => {
     await logout();
@@ -11,39 +20,39 @@ export default function Layout() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="border-b bg-white">
-        <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
+    <div className="min-h-screen bg-app">
+      <header className="border-b border-border bg-surface">
+        <div className="ds-container py-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <span className="font-semibold">Admin & Projects</span>
-            <NavLink className="text-sm" to="/dashboard">
+            <NavLink className={navLinkClassName} to="/dashboard" end>
               Dashboard
             </NavLink>
-            <NavLink className="text-sm" to="/projects">
+            <NavLink className={navLinkClassName} to="/projects" end>
               Projects
             </NavLink>
             {user?.role === 'ADMIN' && (
-              <NavLink className="text-sm" to="/users">
+              <NavLink className={navLinkClassName} to="/users" end>
                 Users
               </NavLink>
             )}
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-600">
-              {user?.email} | {user?.role}
-            </span>
-            <button
-              className="px-3 py-1.5 rounded bg-gray-900 text-white text-sm"
-              onClick={handleLogout}
-            >
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="hidden sm:inline text-sm text-muted-foreground truncate max-w-[18rem]">
+                {user?.email}
+              </span>
+              <RoleBadge role={user?.role} />
+            </div>
+            <Button size="sm" onClick={handleLogout}>
               Logout
-            </button>
+            </Button>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-6">
+      <main className="ds-container py-6">
         <Outlet />
       </main>
     </div>
