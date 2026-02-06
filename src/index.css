@@ -1,1 +1,116 @@
 @import 'tailwindcss';
+
+/* Design System / Style Guide (Tailwind v4 - CSS-first tokens)
+   - Prefer semantic tokens (surface, foreground, brand, etc.)
+   - Use component recipes via @layer components for consistency
+*/
+
+@theme {
+  /* Typography */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji',
+    'Segoe UI Symbol', sans-serif;
+
+  --text-page-title: 1.5rem;
+  --text-page-title--line-height: 2rem;
+  --text-section-title: 1.125rem;
+  --text-section-title--line-height: 1.75rem;
+
+  /* Semantic colors */
+  --color-app: #f9fafb; /* gray-50 */
+  --color-surface: #ffffff;
+  --color-surface-muted: #f3f4f6; /* gray-100 */
+  --color-border: #e5e7eb; /* gray-200 */
+
+  --color-foreground: #111827; /* gray-900 */
+  --color-muted-foreground: #6b7280; /* gray-500 */
+
+  --color-brand: #111827; /* gray-900 */
+  --color-brand-hover: #1f2937; /* gray-800 */
+  --color-brand-foreground: #ffffff;
+
+  --color-danger: #dc2626; /* red-600 */
+  --color-danger-hover: #b91c1c; /* red-700 */
+
+  /* Radii */
+  --radius-card: 0.75rem; /* 12px */
+  --radius-control: 0.5rem; /* 8px */
+
+  /* Shadows */
+  --shadow-card: 0 1px 2px 0 rgb(0 0 0 / 0.06);
+  --shadow-float: 0 12px 28px -12px rgb(0 0 0 / 0.25);
+}
+
+@layer base {
+  html,
+  body {
+    height: 100%;
+  }
+
+  body {
+    @apply font-sans antialiased bg-app text-foreground;
+  }
+}
+
+@layer components {
+  /* Layout */
+  .ds-container {
+    @apply mx-auto max-w-6xl px-4;
+  }
+
+  /* Typography */
+  .ds-page-title {
+    @apply text-page-title font-semibold text-foreground;
+  }
+
+  .ds-section-title {
+    @apply text-section-title font-semibold text-foreground;
+  }
+
+  /* Cards */
+  .ds-card {
+    @apply bg-surface rounded-card shadow-card p-6;
+  }
+
+  /* Buttons */
+  .ds-btn {
+    @apply inline-flex items-center justify-center rounded-control transition disabled:opacity-60 disabled:cursor-not-allowed;
+  }
+
+  .ds-btn-sm {
+    @apply px-3 py-1.5 text-sm;
+  }
+
+  .ds-btn-md {
+    @apply px-4 py-2;
+  }
+
+  .ds-btn-primary {
+    @apply bg-brand text-brand-foreground hover:bg-brand-hover;
+  }
+
+  .ds-btn-secondary {
+    @apply border border-border text-foreground hover:bg-surface-muted;
+  }
+
+  .ds-btn-danger {
+    @apply bg-danger text-brand-foreground hover:bg-danger-hover;
+  }
+
+  .ds-btn-ghost {
+    @apply text-foreground hover:bg-surface-muted;
+  }
+
+  /* Navigation */
+  .ds-nav-link {
+    @apply text-sm px-2 py-1 rounded-control transition;
+  }
+
+  .ds-nav-link-active {
+    @apply bg-brand text-brand-foreground;
+  }
+
+  .ds-nav-link-inactive {
+    @apply text-foreground/80 hover:bg-surface-muted;
+  }
+}
